@@ -1,0 +1,31 @@
+name: Upload Docs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Retrieve file list
+        run: |
+          # Replace this with the command to retrieve a list of markdown files in your root directory
+          file_list=$(find . -name "*.md")
+          echo "::set-output name=file_list::$file_list"
+          
+      - name: Upload files to API
+        env:
+          TOKEN: ${{ secrets.API_TOKEN }}
+        run: |
+          # Replace this with the command to upload the files to your API
+          for file in ${{ steps.retrieve_file_list.outputs.file_list }}; do
+            file_name=$(basename $file)
+            file_content=$(cat $file)
+            curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"name":"'$file_name'","content":"'$file_content'"}' https://jens.vandewiel.eu/api/document/update/$file_name
+          done
