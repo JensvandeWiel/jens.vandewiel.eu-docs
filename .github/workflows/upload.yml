@@ -1,4 +1,4 @@
-name: Upload Docs
+name: Upload docs
 
 on:
   push:
@@ -6,26 +6,32 @@ on:
       - main
 
 jobs:
-  upload-docs:
+  sync_docs:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Create output and state directories
+        run: |
+          mkdir -p $GITHUB_OUTPUT
+          mkdir -p $GITHUB_STATE
+
       - name: Retrieve file list
         run: |
-          # Replace this with the command to retrieve a list of markdown files in your root directory
           file_list=$(find . -name "*.md")
-          echo "::set-output name=file_list::$file_list"
-          
+          echo "$file_list" >> $GITHUB_OUTPUT/file_list.txt
+          cat $GITHUB_OUTPUT/file_list.txt
+
       - name: Upload files to API
         env:
           TOKEN: ${{ secrets.API_TOKEN }}
         run: |
-          # Replace this with the command to upload the files to your API
-          for file in ${{ steps.retrieve_file_list.outputs.file_list }}; do
+          for file in $(cat $GITHUB_OUTPUT/file_list.txt); do
             file_name=$(basename $file)
             file_content=$(cat $file)
-            curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"name":"'$file_name'","content":"'$file_content'"}' https://jens.vandewiel.eu/api/document/update/$file_name
+            echo "${file_name}=${file_content}" >> $GITHUB_STATE/file_content.txt
+            response=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"name":"'$file_name'","content":"'$file_content'"}' https://jens.vandewiel.eu/api/document/update/$file_name)
+            echo "$file_name: $response"
           done
