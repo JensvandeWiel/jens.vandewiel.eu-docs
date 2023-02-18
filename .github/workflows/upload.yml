@@ -16,9 +16,12 @@ jobs:
       env:
         API_ENDPOINT: https://jens.vandewiel.eu # Replace with your API endpoint
         API_TOKEN: ${{ secrets.API_TOKEN }}
+        IGNORE_FILES: "README.md" # Set ignored files here, separated by space
       run: |
+        ignore_files=($IGNORE_FILES)
         for file in $(find . -type f -name "*.md"); do
-          if [ "$file" == "./README.md" ]; then
+          file_name=$(basename "$file")
+          if [[ " ${ignore_files[@]} " =~ " $file_name " ]]; then
             continue
           fi
           content=$(cat "$file")
