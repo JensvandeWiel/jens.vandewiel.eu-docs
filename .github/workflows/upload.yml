@@ -18,6 +18,9 @@ jobs:
         API_TOKEN: ${{ secrets.API_TOKEN }}
       run: |
         for file in $(find . -type f -name "*.md"); do
+          if [ "$file" == "./README.md" ]; then
+            continue
+          fi
           content=$(cat "$file")
           name=${file#./}
           name=${name%.md}
