@@ -15,17 +15,18 @@ jobs:
 
       - name: Retrieve file list
         run: |
-          file_list=$(find . -name "*.md" | tr '\n' ' ')
-          echo "$file_list" >> $GITHUB_OUTPUT
-          echo $GITHUB_OUTPUT
+          find . -name "*.md" > file_list.txt
+          cat file_list.txt >> $GITHUB_OUTPUT
+          cat file_list.txt
+
       - name: Upload files to API
         env:
           TOKEN: ${{ secrets.API_TOKEN }}
         run: |
-          for file in $(echo $GITHUB_OUTPUT); do
-            file_name=$(basename $file)
-            file_content=$(echo $file)
+          while read file; do
+            file_name=$(basename "$file")
+            file_content=$(cat "$file")
             echo "${file_name}=${file_content}" >> $GITHUB_STATE
-            response=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"name":"'$file_name'","content":"'$file_content'"}' https://jens.vandewiel.eu/api/document/update/$file_name)
+            response=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"name":"'$file_name'","content":"'$file_content'"}' "https://jens.vandewiel.eu/api/document/update/$file_name")
             echo "$file_name: $response"
-          done
+          done < file_list.txt
