@@ -20,6 +20,7 @@ jobs:
         for file in $(find . -type f -name "*.md"); do
           content=$(cat "$file")
           name=${file#./}
+          name=${name%.md}
           request="{\"name\": \"$name\", \"content\": \"$content\"}"
           echo "API request: curl -X POST $API_ENDPOINT/api/document/update/$name -H \"Authorization: Bearer $API_TOKEN\" -H \"Content-Type: application/json\" -d '$request'"
           curl -X POST $API_ENDPOINT/api/document/update/$name \
