@@ -1,32 +1,27 @@
-name: Upload docs
+name: Update documentation
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  sync_docs:
+  update_documentation:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Retrieve file list
-        run: |
-          find . -name "*.md" > file_list.txt
-          cat file_list.txt >> $GITHUB_OUTPUT
-          cat file_list.txt
-
-      - name: Upload files to API
-        env:
-          TOKEN: ${{ secrets.API_TOKEN }}
-        run: |
-          while read file; do
-            file_name=$(basename "$file")
-            file_content=$(cat "$file")
-            echo "${file_name}=${file_content}" >> $GITHUB_STATE
-            response=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"name":"'$file_name'","content":"'$file_content'"}' "https://jens.vandewiel.eu/api/document/update/$file_name")
-            echo "$file_name: $response"
-          done < file_list.txt
+    - name: Update documentation
+      env:
+        API_ENDPOINT: https://jens.vandewiel.eu
+        API_TOKEN: ${{ secrets.API_TOKEN }}
+      run: |
+        for file in $(find . -type f -name "*.md"); do
+          content=$(cat "$file")
+          name=${file#./}
+          curl -X POST $API_ENDPOINT/api/document/update/$name \
+            -H "Authorization: Bearer $API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"name\": \"$name\", \"content\": \"$content\"}"
+        done
