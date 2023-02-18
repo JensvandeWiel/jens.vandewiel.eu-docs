@@ -13,11 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Create output and state directories
-        run: |
-          mkdir -p $GITHUB_OUTPUT
-          mkdir -p $GITHUB_STATE
-
       - name: Retrieve file list
         run: |
           file_list=$(find . -name "*.md")
