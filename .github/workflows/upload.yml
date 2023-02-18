@@ -14,14 +14,16 @@ jobs:
 
     - name: Update documentation
       env:
-        API_ENDPOINT: https://jens.vandewiel.eu
+        API_ENDPOINT: https://jens.vandewiel.eu # Replace with your API endpoint
         API_TOKEN: ${{ secrets.API_TOKEN }}
       run: |
         for file in $(find . -type f -name "*.md"); do
           content=$(cat "$file")
           name=${file#./}
+          request="{\"name\": \"$name\", \"content\": \"$content\"}"
+          echo "API request: curl -X POST $API_ENDPOINT/api/document/update/$name -H \"Authorization: Bearer $API_TOKEN\" -H \"Content-Type: application/json\" -d '$request'"
           curl -X POST $API_ENDPOINT/api/document/update/$name \
             -H "Authorization: Bearer $API_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"name\": \"$name\", \"content\": \"$content\"}"
+            -d "$request"
         done
